@@ -3,13 +3,14 @@ import time
 
 # Carpeta por defecto donde se almacenaran los datos.
 CACHE_DIR = Path.home() / ".my_cache"
+MS_POR_DIA = 24 * 60 * 60 * 1000   # 86_400_000 (Milisegundos en un día)
 
 class CacheError(Exception):
     """Cualquier error producido en el módulo caché."""
 
 class Cache:
     """
-    Se encarga de guardar y recuperar datos en disco, de forma que estén disponibles incluso después
+    Esta clase se encarga de guardar y recuperar datos en disco, de forma que estén disponibles incluso después
     de cerrar el programa.
 
     Atributos:
@@ -19,10 +20,8 @@ class Cache:
             almacenar datos en disco.
         obsolescence: Cantidad de días por los cuales se consideran válidos
             los datos de la caché.
-
-    Excepciones:
-        CacheError: Si los argumentos no son válidos.
     """
+
     def __init__(self, app_name: str, obsolescence: int):
         if not isinstance(app_name, str) or not app_name.strip():
             raise CacheError("app_name debe ser un string no vacío")
@@ -75,6 +74,9 @@ class Cache:
 
     def load(self, name: str) -> str:
         """Recupera los datos almacenados en caché, con el nombre name.
+
+        Args:
+            name: Nombre del fichero.
 
         Excepciones:
             CacheError si no existe dato asociado o si no se pudo leer archivo.
@@ -142,3 +144,16 @@ class Cache:
 
     def _obtener_ruta_completa(self, name: str) -> Path:
         return Path(self._cache_dir / self._app_name / name)
+
+    def _esta_caducado(self, name: str) -> bool:
+        """Determina si el dato con el nombre name está caducado.
+
+        Nota: Un dato Caducado se define como aquel cuya edad es igual o mayor al lìmite de
+        obsolescencia determinado.
+
+        Args:
+            name: Nombre del dato.
+        """
+        # Obtenemos la edad en ms y la comparamos con el equivalente en ms del límite de obsolescencia.
+        edad_ms = self.how_old("datos.txt")
+        return edad_ms >= self.obsolescence * MS_POR_DIA
