@@ -47,6 +47,12 @@ class Cache:
     def obsolescence(self) -> int:
         return self._obsolescence
 
+    @cache_dir.setter
+    def cache_dir(self, nueva_cache_dir: str) -> None:
+        if not isinstance(nueva_cache_dir, str) or not str(nueva_cache_dir).strip():
+            raise CacheError("cache_dir debe ser una ruta no vacía")
+        self._cache_dir = Path(nueva_cache_dir)
+
     # -- Métodos públicos --
 
     def set(self, name: str, data: str) -> None:
@@ -57,14 +63,14 @@ class Cache:
         """
         try:
             # Necesitamos crear el path completo.
-            path_completo = Path(self._cache_dir / self._app_name / name)
+            path_completo = self._obtener_ruta_completa(name)
             path_completo.write_text(data)
         except Exception as e:
             raise CacheError(f"No fué posible guardar {name}: {e}") from e
 
     def exists(self, name: str) -> bool:
         """Comprueba si ya existe un fichero con el nombre name en la caché cache_dir."""
-        path_completo = Path(self._cache_dir / self._app_name / name)
+        path_completo = self._obtener_ruta_completa(name)
         return path_completo.exists()
 
     def load(self, name: str) -> str:
@@ -73,7 +79,7 @@ class Cache:
         Excepciones:
             CacheError si no existe dato asociado o si no se pudo leer archivo.
         """
-        path_completo = Path(self._cache_dir / self._app_name / name)
+        path_completo = self._obtener_ruta_completa(name)
         try:
             return path_completo.read_text()
         except FileNotFoundError as e:
@@ -86,9 +92,9 @@ class Cache:
         el nombre name.
 
         Excepciones:
-            CacheError: Si no existe dato o no se puede consultar edadp.
+            CacheError: Si no existe dato o no se puede consultar edad.
         """
-        path_completo = Path(self._cache_dir / self._app_name / name)
+        path_completo = self._obtener_ruta_completa(name)
 
         try:
             # Se utiliza st_mtime como fecha de última modificación de la metadata del archivo
@@ -103,14 +109,13 @@ class Cache:
         except Exception as e:
             raise CacheError(f"No se pudo consultar edad de dato: {e}") from e
 
-
     def delete(self, name: str) -> None:
         """Borra de la caché el fichero con el nombre name.
 
         Excepciones:
             CacheError si no existe dato especificado o si no se pudo borrar.
         """
-        path_completo = Path(self._cache_dir / self._app_name / name)
+        path_completo = self._obtener_ruta_completa(name)
         try:
             path_completo.unlink()
         except FileNotFoundError as e:
@@ -123,10 +128,17 @@ class Cache:
         try:
             path_raiz = Path(self._cache_dir / self._app_name)
 
-            # Según referencia a https://docs-python-org.translate.goog/3/library/pathlib.html?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc
+            # Referencia: https://docs-python-org.translate.goog/3/library/pathlib.html?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc
             # iterdir permite recorrer los elementos de primer nivel del path especificado.
             for path in path_raiz.iterdir():
+                # Referencia: https://docs.python.org/3/library/pathlib.html#pathlib.Path.unlink.
                 if path.is_file():
+                    # Referencia: https://docs.python.org/3/library/pathlib.html#pathlib.Path.unlink.
                     path.unlink()
         except Exception as e:
             raise CacheError(f"No se pudo limpiar la caché: {e}") from e
+
+    # -- Métodos privados
+
+    def _obtener_ruta_completa(self, name: str) -> Path:
+        return Path(self._cache_dir / self._app_name / name)
