@@ -1,2 +1,2 @@
 def main() -> None:
-    print("Hello from py-mad-datos!")
+    print("Hello from traficFines!")

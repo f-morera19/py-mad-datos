@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1e9ec138-e798-4053-b87a-5f78be2edacc" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/py-mad-datos.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/py-mad-datos@1.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/traficFines.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cuadernos/enunciado_original.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/cuadernos/enunciado_original.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/traficFines/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/traficFines/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/traficFines/cacheUrl.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/traficFines/madridFines.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "f-morera19"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/f-morera19/py-mad-datos.git",
+    "accountId": "54bf296e-3a80-4cae-9c85-3108fc03ac9f"
+  }
+}]]></component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.000000038398479" />
+      <entry key="S5" value="1.0015209245947099" />
+      <entry key="S10" value="1.0746384525017287" />
+      <entry key="S30" value="2.4830348817127224" />
+      <entry key="S60" value="5.219123906135425" />
+      <entry key="M2" value="11.78052081175791" />
+      <entry key="M5" value="29.626746629587007" />
+      <entry key="M10" value="50.76428630350646" />
+      <entry key="M15" value="69.66880246306508" />
+      <entry key="M30" value="118.57298534314619" />
+      <entry key="H1" value="175.72681240291237" />
+      <entry key="H2" value="221.90903770264507" />
+      <entry key="H4" value="251.6323837762861" />
+      <entry key="D1" value="280.6669448957554" />
+      <entry key="W1" value="286.0838749192431" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="6.370780098103168E-63" />
+      <entry key="MS500" value="3.760315458360095E-13" />
+      <entry key="S2" value="0.0011093197064173757" />
+      <entry key="S5" value="0.09765492549078653" />
+      <entry key="S10" value="0.44036679816110247" />
+      <entry key="S30" value="1.206736745204052" />
+      <entry key="S60" value="1.5545882098750865" />
+      <entry key="M2" value="1.7973177976996846" />
+      <entry key="M5" value="2.1640426334304235" />
+      <entry key="M10" value="2.566405281965672" />
+      <entry key="M15" value="3.0422653934489134" />
+      <entry key="M30" value="4.6327742608293425" />
+      <entry key="H1" value="6.723964395819462" />
+      <entry key="H2" value="8.479588080471537" />
+      <entry key="H4" value="9.625653064707615" />
+      <entry key="D1" value="10.753215609108654" />
+      <entry key="W1" value="10.964284203037268" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9726549474122855" />
+      <entry key="MS500" value="0.9944701686733427" />
+      <entry key="S2" value="0.9994382206756789" />
+      <entry key="S5" value="1.0870584956115386" />
+      <entry key="S10" value="1.485764358650555" />
+      <entry key="S30" value="3.657576233233134" />
+      <entry key="S60" value="6.7510373240266475" />
+      <entry key="M2" value="13.563200153191941" />
+      <entry key="M5" value="31.780598376805056" />
+      <entry key="M10" value="53.32096260732413" />
+      <entry key="M15" value="72.70133150267587" />
+      <entry key="M30" value="123.1968243907867" />
+      <entry key="H1" value="182.44407273004379" />
+      <entry key="H2" value="230.3844023220252" />
+      <entry key="H4" value="261.2556498172194" />
+      <entry key="D1" value="291.4197183550931" />
+      <entry key="W1" value="297.048094783922" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3LySSvcxLzhK20MfNNb7XAyl1Fc" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "in-progress",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Users/fmorera/Development/traficFines",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
+    "to.speed.mode.migration.done": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-PY-262.11879.98" />
+        <option value="bundled-python-sdk-ebb3072d7bdf-5bd6d13a2a75-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-262.11879.98" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1e9ec138-e798-4053-b87a-5f78be2edacc" name="Changes" comment="" />
+      <created>1794424817895</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1794424817895</updated>
+      <workItem from="1794424818929" duration="4153000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
