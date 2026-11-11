@@ -4,6 +4,7 @@ import time, hashlib, requests, json
 # Carpeta por defecto donde se almacenaran los datos.
 CACHE_DIR = Path.home() / ".my_cache"
 MS_POR_DIA = 24 * 60 * 60 * 1000   # 86_400_000 (Milisegundos en un día)
+TIMEOUT_PETICION = 120  # Segundos máximos de espera de una petición HTTP.
 
 class CacheError(Exception):
     """Cualquier error producido en el módulo caché."""
@@ -110,7 +111,9 @@ class Cache:
         try:
             # Necesitamos crear el path completo.
             path_completo = self._obtener_ruta_completa(name)
-            path_completo.write_text(data)
+            # La sub-carpeta de la aplicación puede no existir todavía.
+            path_completo.parent.mkdir(parents=True, exist_ok=True)
+            path_completo.write_text(data, encoding="utf-8")
         except Exception as e:
             raise CacheError(f"No fué posible guardar {name}: {e}") from e
 
@@ -137,7 +140,7 @@ class Cache:
         """
         path_completo = self._obtener_ruta_completa(name)
         try:
-            return path_completo.read_text()
+            return path_completo.read_text(encoding="utf-8")
         except FileNotFoundError as e:
             raise CacheError(f"No existe ningún dato {path_completo}") from e
         except Exception as e:
@@ -196,6 +199,10 @@ class Cache:
         try:
             path_raiz = Path(self._cache_dir / self._app_name)
 
+            # Si la carpeta aún no existe, la caché ya está vacía.
+            if not path_raiz.exists():
+                return
+
             # Referencia: https://docs-python-org.translate.goog/3/library/pathlib.html?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc
             # iterdir permite recorrer los elementos de primer nivel del path especificado.
             for path in path_raiz.iterdir():
@@ -232,7 +239,7 @@ class Cache:
             CacheError: Si no existe el dato o no se puede consultar su edad.
         """
         # Obtenemos la edad en ms y la comparamos con el equivalente en ms del límite de obsolescencia.
-        edad_ms = self.how_old(name)
+        edad_ms = Cache.how_old(self, name)
         return edad_ms >= self.obsolescence * MS_POR_DIA
 
 
@@ -259,20 +266,19 @@ class CacheUrl(Cache):
         """
         url_hashed = self._obtener_hash_completo(url, kwargs)
 
-        # Hay que consultar si existe ya un objeto asociado a esta petición y, en ese caso, si aún es no está caducado.
-        if self.exists(url_hashed) and not self._esta_caducado(url_hashed):
-            print("clave ya existe y valor no esta caducado")
-            return self.load(url_hashed)
+        # Hay que consultar si existe ya un objeto asociado a esta petición y, en ese caso, si aún no está caducado.
+        if Cache.exists(self, url_hashed) and not self._esta_caducado(url_hashed):
+            return Cache.load(self, url_hashed)
 
-        # Si no exsite aún, podemos hacer el request, guardar objeto asociado y retornarlo.
-        datos = requests.get(url)
-        if datos.status_code == 200:
-            kwargs[url_hashed] = datos  # nuevo registro en el fichero.
-            print("Nueva llave creada con éxito")
-            return kwargs[url_hashed]
-        else:
+        # Si no existe aún (o está caducado), se hace la petición, se guarda el resultado y se devuelve.
+        respuesta = requests.get(url, timeout=TIMEOUT_PETICION)
+        if respuesta.status_code != 200:
             raise CacheError(f"Se obtuvo error al tratar de obtener "
-                             f"información de {url}, con código de estado {datos.status_code}")
+                             f"información de {url}, con código de estado {respuesta.status_code}")
+
+        texto = self._decodificar(respuesta.content)
+        Cache.set(self, url_hashed, texto)
+        return texto
 
     def exists(self, name: str, **kwargs) -> bool:
         """Comprueba si ya existe un dato para esta solicitud en la caché.
@@ -328,6 +334,22 @@ class CacheUrl(Cache):
         """
         url_hashed = self._obtener_hash_completo(name, kwargs)
         super().delete(url_hashed)
+
+    @staticmethod
+    def _decodificar(contenido: bytes) -> str:
+        """Convierte a texto el contenido descargado, probando UTF-8 y, si falla, Latin-1.
+
+        Args:
+            contenido: Bytes de la respuesta HTTP.
+
+        Excepciones:
+            Ninguna.
+        """
+        try:
+            return contenido.decode("utf-8")
+        except UnicodeDecodeError:
+            # Latin-1 puede decodificar cualquier secuencia de bytes, así que no falla.
+            return contenido.decode("latin-1")
 
     @staticmethod
     def _obtener_hash_completo(url: str, kwargs : dict) -> str:
