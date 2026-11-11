@@ -134,7 +134,11 @@ class Cache:
             raise CacheError(f"No se pudo borrar {path_completo}: {e}") from e
 
     def clear(self) -> None:
-        """Borra todos los elementos de la caché."""
+        """Borra todos los elementos de la caché.
+
+         Excepciones:
+            CacheError si no se logra limpiar la caché.
+        """
         try:
             path_raiz = Path(self._cache_dir / self._app_name)
 
@@ -151,6 +155,11 @@ class Cache:
     # -- Métodos privados
 
     def _obtener_ruta_completa(self, name: str) -> Path:
+        """Se genera el nombre de la ruta completa para el dato especificado.
+
+        Args:
+            name: Nombre de la data de la cual se desea obtener la ruta completa.
+        """
         return Path(self._cache_dir / self._app_name / name)
 
     def _esta_caducado(self, name: str) -> bool:
@@ -165,7 +174,6 @@ class Cache:
         # Obtenemos la edad en ms y la comparamos con el equivalente en ms del límite de obsolescencia.
         edad_ms = self.how_old(name)
         return edad_ms >= self.obsolescence * MS_POR_DIA
-
 
 
 class CacheUrl(Cache):
