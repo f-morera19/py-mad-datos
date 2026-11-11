@@ -12,16 +12,16 @@ class Cache:
     Se encarga de guardar y recuperar datos en disco, de forma que estén disponibles incluso después
     de cerrar el programa.
 
-        Atributos:
-            app_name: Nombre asociado a la aplicación concreta. Se utilizará para
-                crear una sub-carpeta dentro de la carpeta CACHE_DIR.
-            cache_dir: Ruta completa de la sub-carpeta que se utilizará para
-                almacenar datos en disco.
-            obsolescence: Cantidad de días por los cuales se consideran válidos
-                los datos de la caché.
+    Atributos:
+        app_name: Nombre asociado a la aplicación concreta. Se utilizará para
+            crear una sub-carpeta dentro de la carpeta CACHE_DIR.
+        cache_dir: Ruta completa de la sub-carpeta que se utilizará para
+            almacenar datos en disco.
+        obsolescence: Cantidad de días por los cuales se consideran válidos
+            los datos de la caché.
 
-        Excepciones:
-            CacheError: Si los argumentos no son válidos.
+    Excepciones:
+        CacheError: Si los argumentos no son válidos.
     """
     def __init__(self, app_name: str, obsolescence: int):
         if not isinstance(app_name, str) or not app_name.strip():
