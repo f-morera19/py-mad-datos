@@ -23,6 +23,17 @@ class Cache:
     """
 
     def __init__(self, app_name: str, obsolescence: int):
+        """Inicializa la caché con el nombre de la aplicación y el límite de obsolescencia.
+
+        Args:
+            app_name: Nombre asociado a la aplicación concreta. Se utilizará para
+                crear una sub-carpeta dentro de la carpeta CACHE_DIR.
+            obsolescence: Cantidad de días por los cuales se consideran válidos
+                los datos de la caché.
+
+        Excepciones:
+            CacheError: Si app_name no es un string no vacío o si obsolescence no es un entero >= 0.
+        """
         if not isinstance(app_name, str) or not app_name.strip():
             raise CacheError("app_name debe ser un string no vacío")
         if not isinstance(obsolescence, int) or obsolescence < 0:
@@ -36,18 +47,50 @@ class Cache:
 
     @property
     def app_name(self) -> str:
+        """Devuelve el nombre asociado a la aplicación.
+
+        Args:
+            Ninguno.
+
+        Excepciones:
+            Ninguna.
+        """
         return self._app_name
 
     @property
     def cache_dir(self) -> str:
+        """Devuelve la ruta de la carpeta raíz de la caché.
+
+        Args:
+            Ninguno.
+
+        Excepciones:
+            Ninguna.
+        """
         return str(self._cache_dir)
 
     @property
     def obsolescence(self) -> int:
+        """Devuelve la cantidad de días por los cuales se consideran válidos los datos de la caché.
+
+        Args:
+            Ninguno.
+
+        Excepciones:
+            Ninguna.
+        """
         return self._obsolescence
 
     @cache_dir.setter
     def cache_dir(self, nueva_cache_dir: str) -> None:
+        """Establece una nueva ruta para la carpeta raíz de la caché.
+
+        Args:
+            nueva_cache_dir: Nueva ruta de la carpeta raíz de la caché.
+
+        Excepciones:
+            CacheError: Si nueva_cache_dir no es un string no vacío.
+        """
         if not isinstance(nueva_cache_dir, str) or not str(nueva_cache_dir).strip():
             raise CacheError("cache_dir debe ser una ruta no vacía")
         self._cache_dir = Path(nueva_cache_dir)
@@ -74,8 +117,11 @@ class Cache:
     def exists(self, name: str) -> bool:
         """Comprueba si ya existe un fichero con el nombre name en la caché cache_dir.
 
-            Args:
-                name: Nombre del dato a comprobar.
+        Args:
+            name: Nombre del dato a comprobar.
+
+        Excepciones:
+            Ninguna.
         """
         path_completo = self._obtener_ruta_completa(name)
         return path_completo.exists()
@@ -87,7 +133,7 @@ class Cache:
             name: Nombre del fichero.
 
         Excepciones:
-            CacheError si no existe dato asociado o si no se pudo leer archivo.
+            CacheError: Si no existe dato asociado o si no se pudo leer el fichero.
         """
         path_completo = self._obtener_ruta_completa(name)
         try:
@@ -98,11 +144,13 @@ class Cache:
             raise CacheError(f"No se pudo leer dato {path_completo}: {e}") from e
 
     def how_old(self, name: str) -> float:
-        """Determina la edad en milisegundos del fichero almacenado en la caché con
-        el nombre name.
+        """Determina la edad en milisegundos del fichero almacenado en la caché con el nombre name.
+
+        Args:
+            name: Nombre del dato a consultar.
 
         Excepciones:
-            CacheError: Si no existe dato o no se puede consultar edad.
+            CacheError: Si no existe dato o no se puede consultar su edad.
         """
         path_completo = self._obtener_ruta_completa(name)
 
@@ -122,8 +170,11 @@ class Cache:
     def delete(self, name: str) -> None:
         """Borra de la caché el fichero con el nombre name.
 
+        Args:
+            name: Nombre del dato a borrar.
+
         Excepciones:
-            CacheError si no existe dato especificado o si no se pudo borrar.
+            CacheError: Si no existe el dato especificado o si no se pudo borrar.
         """
         path_completo = self._obtener_ruta_completa(name)
         try:
@@ -136,8 +187,11 @@ class Cache:
     def clear(self) -> None:
         """Borra todos los elementos de la caché.
 
-         Excepciones:
-            CacheError si no se logra limpiar la caché.
+        Args:
+            Ninguno.
+
+        Excepciones:
+            CacheError: Si no se logra limpiar la caché.
         """
         try:
             path_raiz = Path(self._cache_dir / self._app_name)
@@ -155,21 +209,27 @@ class Cache:
     # -- Métodos privados
 
     def _obtener_ruta_completa(self, name: str) -> Path:
-        """Se genera el nombre de la ruta completa para el dato especificado.
+        """Genera la ruta completa para el dato especificado.
 
         Args:
-            name: Nombre de la data de la cual se desea obtener la ruta completa.
+            name: Nombre del dato del cual se desea obtener la ruta completa.
+
+        Excepciones:
+            Ninguna.
         """
         return Path(self._cache_dir / self._app_name / name)
 
     def _esta_caducado(self, name: str) -> bool:
         """Determina si el dato con el nombre name está caducado.
 
-        Nota: Un dato Caducado se define como aquel cuya edad es igual o mayor al lìmite de
+        Nota: Un dato caducado se define como aquel cuya edad es igual o mayor al límite de
         obsolescencia determinado.
 
         Args:
             name: Nombre del dato.
+
+        Excepciones:
+            CacheError: Si no existe el dato o no se puede consultar su edad.
         """
         # Obtenemos la edad en ms y la comparamos con el equivalente en ms del límite de obsolescencia.
         edad_ms = self.how_old(name)
@@ -183,17 +243,19 @@ class CacheUrl(Cache):
     """
 
     def get(self, url: str, **kwargs) -> str:
-        """Realiza un get a la URL indicada. Consulta si existe ya un objeto
-        asociado a esta petición, si no lo tiene realiza la petición correspondiente,
-        guarda el resultado en la caché y devuelve el objeto correspondiente.
+        """Realiza un get a la URL indicada.
+
+        Consulta si existe ya un objeto asociado a esta petición; si no lo tiene, realiza la
+        petición correspondiente, guarda el resultado en la caché y devuelve el objeto correspondiente.
 
         Args:
             url: URL indicada.
-            **kwargs: Parámetros opcionales de la petición. Deben de ser filtros válidos para los datos de la url
-            en cuestión
+            **kwargs: Parámetros opcionales de la petición. Deben ser filtros válidos para los
+                datos de la url en cuestión.
 
         Excepciones:
-           CacheError
+            CacheError: Si el servidor no responde con código 200 o si falla el acceso a la caché.
+            requests.RequestException: Si la petición HTTP no se puede realizar.
         """
         url_hashed = self._obtener_hash_completo(url, kwargs)
 
@@ -217,62 +279,68 @@ class CacheUrl(Cache):
 
         Args:
             name: URL consultada.
-            **kwargs: Parámetros opcionales de la petición. Deben de ser filtros válidos para los datos de la url
-            en cuestión. Por ejemplo: {"CALIFICACIÓN": "GRAVE"}, {"LUGAR": "CL CLARA DEL REY 36"}, etc.
+            **kwargs: Parámetros opcionales de la petición. Deben ser filtros válidos para los
+                datos de la url en cuestión. Por ejemplo: {"CALIFICACIÓN": "GRAVE"},
+                {"LUGAR": "CL CLARA DEL REY 36"}, etc.
 
         Excepciones:
-            CacheError: Si la petición falla o el servidor no responde con 200.
+            Ninguna.
         """
         # Buscamos por el hash del url + los parámetros recibidos.
         url_hashed = self._obtener_hash_completo(name, kwargs)
         return super().exists(url_hashed)
 
     def load(self, name: str, **kwargs) -> str:
-        """Recupera los datos almacenados en caché, con el nombre name.
+        """Recupera los datos almacenados en caché para la URL name y los parámetros indicados.
 
-            Args:
-                name: Nombre del dato a obtener.
-                **kwargs: Parámetros opcionales de la petición.
+        Args:
+            name: URL del dato a obtener.
+            **kwargs: Parámetros opcionales de la petición.
 
-            Excepciones:
-                CacheError si no existe dato asociado o si no se pudo leer archivo.
+        Excepciones:
+            CacheError: Si no existe dato asociado o si no se pudo leer el fichero.
         """
         url_hashed = self._obtener_hash_completo(name, kwargs)
         return super().load(url_hashed)
 
     def how_old(self, name: str, **kwargs) -> float:
-        """Determina la edad en milisegundos del fichero almacenado en la caché con
-            el nombre name.
+        """Determina la edad en milisegundos del dato almacenado en la caché para la URL name.
 
         Args:
-            name: Nombre del dato a obtener.
-             **kwargs: Parámetros opcionales de la petición.
+            name: URL del dato a consultar.
+            **kwargs: Parámetros opcionales de la petición.
 
         Excepciones:
-            CacheError: Si no existe dato o no se puede consultar edad.
+            CacheError: Si no existe dato o no se puede consultar su edad.
         """
         url_hashed = self._obtener_hash_completo(name, kwargs)
         return super().how_old(url_hashed)
 
     def delete(self, name: str, **kwargs) -> None:
-        """Borra de la caché el fichero con el nombre name.
+        """Borra de la caché el dato asociado a la URL name y los parámetros indicados.
+
+        Args:
+            name: URL del dato a borrar.
+            **kwargs: Parámetros opcionales de la petición.
 
         Excepciones:
-            CacheError si no existe dato especificado o si no se pudo borrar.
-            **kwargs: Parámetros opcionales de la petición.
+            CacheError: Si no existe el dato especificado o si no se pudo borrar.
         """
         url_hashed = self._obtener_hash_completo(name, kwargs)
         super().delete(url_hashed)
 
     @staticmethod
     def _obtener_hash_completo(url: str, kwargs : dict) -> str:
-        """Hash de la url junto con los parámetros opcionales de la petición.
+        """Calcula el hash MD5 de la url junto con los parámetros opcionales de la petición.
 
-            Args:
-                url: URL consultada.
-                **kwargs: Parámetros opcionales de la petición. Deben de ser filtros válidos para los datos de la url
-                en cuestión. Por ejemplo: {"CALIFICACIÓN": "GRAVE"}, {"LUGAR": "CL CLARA DEL REY 36"}, etc.
+        Args:
+            url: URL consultada.
+            kwargs: Diccionario con los parámetros opcionales de la petición. Deben ser filtros
+                válidos para los datos de la url en cuestión. Por ejemplo: {"CALIFICACIÓN": "GRAVE"},
+                {"LUGAR": "CL CLARA DEL REY 36"}, etc.
 
+        Excepciones:
+            Ninguna.
         """
         # Se serializa un diccionario en un objeto json que podemos representar como un string.
         params = json.dumps(kwargs, sort_keys=True, default=str)
