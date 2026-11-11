@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 # Carpeta por defecto donde se almacenaran los datos.
 CACHE_DIR = Path.home() / ".my_cache"
@@ -20,8 +21,7 @@ class Cache:
                 los datos de la caché.
 
         Excepciones:
-            CacheError: Si los argumentos no son válidos o no se puede crear
-                el directorio.
+            CacheError: Si los argumentos no son válidos.
     """
     def __init__(self, app_name: str, obsolescence: int):
         if not isinstance(app_name, str) or not app_name.strip():
@@ -63,25 +63,70 @@ class Cache:
             raise CacheError(f"No fué posible guardar {name}: {e}") from e
 
     def exists(self, name: str) -> bool:
-        """Comprueba si ya existe un fichero con el nombre name en la caché cache_dir.
-
-        Excepciones:
-            CacheError si `name` no es válido o no se logra escribir en él.
-        """
+        """Comprueba si ya existe un fichero con el nombre name en la caché cache_dir."""
+        path_completo = Path(self._cache_dir / self._app_name / name)
+        return path_completo.exists()
 
     def load(self, name: str) -> str:
         """Recupera los datos almacenados en caché, con el nombre name.
 
         Excepciones:
-            CacheError si no existe dato asociado.
+            CacheError si no existe dato asociado o si no se pudo leer archivo.
         """
+        path_completo = Path(self._cache_dir / self._app_name / name)
+        try:
+            return path_completo.read_text()
+        except FileNotFoundError as e:
+            raise CacheError(f"No existe ningún dato {path_completo}") from e
+        except Exception as e:
+            raise CacheError(f"No se pudo leer dato {path_completo}: {e}") from e
 
     def how_old(self, name: str) -> float:
         """Determina la edad en milisegundos del fichero almacenado en la caché con
-        el nombre name."""
+        el nombre name.
+
+        Excepciones:
+            CacheError: Si no existe dato o no se puede consultar edadp.
+        """
+        path_completo = Path(self._cache_dir / self._app_name / name)
+
+        try:
+            # Se utiliza st_mtime como fecha de última modificación de la metadata del archivo
+            # en cuestión (Esto en Unix, en Windows es la fecha de creación).
+            # Referencia: https://docs.python.org/3/library/stat.html
+            tiempo_modificacion = path_completo.stat().st_mtime
+
+            # Calcula la diferencia con la hora actual y pasa a milisegundos
+            return (time.time() - tiempo_modificacion) * 1000
+        except FileNotFoundError as e:
+            raise CacheError(f"No existe dato {path_completo}") from e
+        except Exception as e:
+            raise CacheError(f"No se pudo consultar edad de dato: {e}") from e
+
 
     def delete(self, name: str) -> None:
-        """Borra de la caché el fichero con el nombre name."""
+        """Borra de la caché el fichero con el nombre name.
+
+        Excepciones:
+            CacheError si no existe dato especificado o si no se pudo borrar.
+        """
+        path_completo = Path(self._cache_dir / self._app_name / name)
+        try:
+            path_completo.unlink()
+        except FileNotFoundError as e:
+            raise CacheError(f"No existe ningún dato {path_completo}") from e
+        except Exception as e:
+            raise CacheError(f"No se pudo borrar {path_completo}: {e}") from e
 
     def clear(self) -> None:
         """Borra todos los elementos de la caché."""
+        try:
+            path_raiz = Path(self._cache_dir / self._app_name)
+
+            # Según referencia a https://docs-python-org.translate.goog/3/library/pathlib.html?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc
+            # iterdir permite recorrer los elementos de primer nivel del path especificado.
+            for path in path_raiz.iterdir():
+                if path.is_file():
+                    path.unlink()
+        except Exception as e:
+            raise CacheError(f"No se pudo limpiar la caché: {e}") from e
