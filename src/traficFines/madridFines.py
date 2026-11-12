@@ -57,7 +57,8 @@ class MadridFines:
 
     @property
     def loaded(self) -> list[tuple[int|None, int]]:
-        return self._loaded
+        # Se devuelve una copia para que la lista interna no se pueda modificar desde fuera de la clase.
+        return list(self._loaded)
 
     # -- Métodos estáticos --
 

@@ -1,7 +1,7 @@
 [project]
 name = "traficFines"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Descarga, limpieza y análisis de las multas de tráfico del portal de datos abiertos del Ayuntamiento de Madrid, con caché en disco."
 readme = "README.md"
 authors = [
     { name = "Fabian Morera", email = "f-morera19@users.noreply.github.com" }
@@ -9,7 +9,6 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.15.0",
-    "ipykernel>=7.4.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
     "pandas>=3.1.1",
@@ -25,3 +24,8 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "traficFines"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+]
