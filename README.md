@@ -105,6 +105,29 @@ multas.fines_hour("evolucion_multas.png")   # guarda el gráfico de multas por h
 ```
 ---
 
+## Tests
+
+Las pruebas automáticas están en la carpeta `pruebas/`, fuera del paquete distribuido (`src/traficFines/`):
+
+- `pruebas/conftest.py`: fixtures compartidas (caché redirigida, respuestas HTTP falsas, HTML del portal y CSV de ejemplo).
+- `pruebas/test_cache.py`: pruebas de `Cache`, `CacheUrl` y `CacheError`.
+- `pruebas/test_madridFines.py`: pruebas de `MadridFines`, `MadridError` y de `__init__.py`.
+
+Para instalar las dependencias de desarrollo (`pytest`, `pytest-cov`) y ejecutar las pruebas con el informe de cobertura:
+
+```bash
+uv sync
+```
+
+```bash
+uv run pytest --cov=traficFines --cov-report=term-missing
+```
+
+- **Sin internet**: todas las llamadas a `requests.get` (descarga de CSV y HTML del portal) se simulan. Si alguna prueba intentase acceder a la red, falla.
+- **Ficheros generados**: la caché, los gráficos PNG y los ficheros auxiliares de pytest, coverage y matplotlib se escriben solo en `pruebas/data/` (ignorada por git). Nunca se toca `~/.my_cache`.
+
+---
+
 ## Nota sobre el uso de IA
 
 Este README se redactó con ayuda de una herramienta de inteligencia artificial (Claude, de Anthropic). El contenido ha sido revisado por el autor.

@@ -41,7 +41,7 @@ class Cache:
             raise CacheError("obsolescence debe ser un entero >= 0")
 
         self._app_name = app_name
-        self._cache_dir = CACHE_DIR
+        self._cache_dir = Path(CACHE_DIR) / app_name
         self._obsolescence = obsolescence
 
     # -- Propiedades --
@@ -60,7 +60,7 @@ class Cache:
 
     @property
     def cache_dir(self) -> str:
-        """Devuelve la ruta de la carpeta raíz de la caché.
+        """Devuelve la ruta completa de la sub-carpeta de la aplicación (CACHE_DIR / app_name).
 
         Args:
             Ninguno.
@@ -81,20 +81,6 @@ class Cache:
             Ninguna.
         """
         return self._obsolescence
-
-    @cache_dir.setter
-    def cache_dir(self, nueva_cache_dir: str) -> None:
-        """Establece una nueva ruta para la carpeta raíz de la caché.
-
-        Args:
-            nueva_cache_dir: Nueva ruta de la carpeta raíz de la caché.
-
-        Excepciones:
-            CacheError: Si nueva_cache_dir no es un string no vacío.
-        """
-        if not isinstance(nueva_cache_dir, str) or not str(nueva_cache_dir).strip():
-            raise CacheError("cache_dir debe ser una ruta no vacía")
-        self._cache_dir = Path(nueva_cache_dir)
 
     # -- Métodos públicos --
 
@@ -171,19 +157,18 @@ class Cache:
             raise CacheError(f"No se pudo consultar edad de dato: {e}") from e
 
     def delete(self, name: str) -> None:
-        """Borra de la caché el fichero con el nombre name.
+        """Borra de la caché el fichero con el nombre name. Si no existe, no hace nada.
 
         Args:
             name: Nombre del dato a borrar.
 
         Excepciones:
-            CacheError: Si no existe el dato especificado o si no se pudo borrar.
+            CacheError: Si el dato existe pero no se pudo borrar.
         """
         path_completo = self._obtener_ruta_completa(name)
         try:
-            path_completo.unlink()
-        except FileNotFoundError as e:
-            raise CacheError(f"No existe ningún dato {path_completo}") from e
+            # missing_ok=True evita que borrar un dato inexistente sea un error.
+            path_completo.unlink(missing_ok=True)
         except Exception as e:
             raise CacheError(f"No se pudo borrar {path_completo}: {e}") from e
 
@@ -197,7 +182,7 @@ class Cache:
             CacheError: Si no se logra limpiar la caché.
         """
         try:
-            path_raiz = Path(self._cache_dir / self._app_name)
+            path_raiz = self._cache_dir
 
             # Si la carpeta aún no existe, la caché ya está vacía.
             if not path_raiz.exists():
@@ -224,7 +209,7 @@ class Cache:
         Excepciones:
             Ninguna.
         """
-        return Path(self._cache_dir / self._app_name / name)
+        return self._cache_dir / name
 
     def _esta_caducado(self, name: str) -> bool:
         """Determina si el dato con el nombre name está caducado.
@@ -330,7 +315,7 @@ class CacheUrl(Cache):
             **kwargs: Parámetros opcionales de la petición.
 
         Excepciones:
-            CacheError: Si no existe el dato especificado o si no se pudo borrar.
+            CacheError: Si el dato existe pero no se pudo borrar.
         """
         url_hashed = self._obtener_hash_completo(name, kwargs)
         super().delete(url_hashed)

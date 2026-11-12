@@ -167,6 +167,8 @@ class MadridFines:
 
                 # Cada mes publica varios ficheros ("CSV Detalle", "CSV Agrupadas-excluidas", "TXT Detalle"...).
                 # Solo interesa el CSV con el detalle de las multas; los demás son resúmenes o duplicados.
+                # Nota aclaratoria: Esta condición se generó con ayuda de una herramienta de inteligencia artificial
+                # (Claude, de Anthropic). El contenido ha sido revisado por el autor.
                 if not item.get_text(" ", strip=True).upper().startswith("CSV DETALLE"):
                     continue
 
@@ -207,6 +209,9 @@ class MadridFines:
         # 1. Se normalizan los nombres de columna: se eliminan caracteres nulos (\x00) y espacios sobrantes.
         # La expresión [\x00\s]+ encaja con cualquier secuencia de uno o más caracteres que sean nulos o espacios
         # en blanco
+
+        # Nota aclaratoria: Esta condición se generó con ayuda de una herramienta de inteligencia artificial
+        # (Claude, de Anthropic). El contenido ha sido revisado por el autor.
         df.rename(columns=lambda c: re.sub(r'[\x00\s]+', ' ', str(c)).strip(), inplace=True)
 
         # 2. Se eliminan espacios en blanco en los valores de las columnas de texto.
@@ -289,6 +294,9 @@ class MadridFines:
             meses_previos = [m for (m, a) in self._loaded if a == year and m is not None]
             if meses_previos:
                 resultado = resultado[~resultado["MES"].isin(meses_previos)]
+
+                # Nota aclaratoria: Esta condición se generó con ayuda de una herramienta de inteligencia artificial
+                # (Claude, de Anthropic). El contenido ha sido revisado por el autor.
                 self._loaded = [(m, a) for (m, a) in self._loaded if a != year]
 
         # Se añade al dataframe data actual (concatenando filas).
@@ -355,6 +363,8 @@ class MadridFines:
         df = self._datos_para_analisis(["ANIO", "MES", "CALIFICACION"])
         calificacion = df["CALIFICACION"].astype(str).str.strip()
 
+        # Nota aclaratoria: Este cast se generó con ayuda de una herramienta de inteligencia artificial
+        # (Claude, de Anthropic). El contenido ha sido revisado y probado por el autor.
         return cast(
             pd.DataFrame,
             df.assign(CALIFICACION=calificacion)
