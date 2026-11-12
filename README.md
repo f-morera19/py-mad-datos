@@ -69,10 +69,10 @@ Crea el entorno `.venv` con el paquete en modo editable y las dependencias de de
 ### Generar el `.whl` de nuevo
 
 ```bash
-uv build
+uv build --no-create-gitignore
 ```
 
-Los ficheros se crean en `dist/`.
+Los ficheros se crean en `dist/`, que forma parte del repositorio. La opción `--no-create-gitignore` evita que `uv` cree un `dist/.gitignore` que haría que git ignorase los paquetes generados.
 
 ---
 
