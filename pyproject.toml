@@ -1,0 +1,41 @@
+[project]
+name = "traficFines"
+version = "1.0.0"
+description = "Descarga, limpieza y análisis de las multas de tráfico del portal de datos abiertos del Ayuntamiento de Madrid, con caché en disco."
+readme = "README.md"
+authors = [
+    { name = "Fabian Morera", email = "f-morera19@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
+    "pandas>=3.1.1",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+traficFines = "traficFines:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "traficFines"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["pruebas"]
+# Los ficheros auxiliares de pytest y coverage también se guardan en pruebas/data.
+cache_dir = "pruebas/data/.pytest_cache"
+
+[tool.coverage.run]
+data_file = "pruebas/data/.coverage"
