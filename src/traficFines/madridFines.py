@@ -19,6 +19,22 @@ MESES = {
 class MadridError(Exception):
     """Cualquier error producido en el módulo caché."""
 
+
+def get_url(year: int, month: int|None) -> str:
+    """Devuelve la URL del fichero CSV de multas correspondiente a un mes y año concretos.
+
+    Función del módulo pedida en el enunciado. Delega en `MadridFines.get_url`.
+
+    Args:
+        year: Año (4 cifras, ej. 2024) para filtrar multas.
+        month: Mes (1-12) para filtrar multas.
+
+    Excepciones:
+        MadridError: Si no se puede acceder al portal o si el año y mes no se encuentran en él.
+    """
+    return MadridFines.get_url(year, month)
+
+
 class MadridFines:
     """
     Esta clase tiene como objetivo gestionar, limpiar, almacenar y analizar datos de multas de tráfico del
@@ -403,6 +419,30 @@ class MadridFines:
             .groupby(["MES", "ANIO"])
             .sum()
         )
+
+    # -- Nombres del enunciado --
+
+    def fines_calification(self) -> pd.DataFrame:
+        """Nombre del enunciado para `fines_calificacion`; devuelve el mismo resultado.
+
+        Args:
+            Ninguno.
+
+        Excepciones:
+            MadridError: Si no hay datos cargados o faltan columnas necesarias.
+        """
+        return self.fines_calificacion()
+
+    def total_payment(self) -> pd.DataFrame:
+        """Nombre del enunciado para `total_payments`; devuelve el mismo resultado.
+
+        Args:
+            Ninguno.
+
+        Excepciones:
+            MadridError: Si no hay datos cargados o faltan columnas necesarias.
+        """
+        return self.total_payments()
 
     # -- Métodos privados --
 

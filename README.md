@@ -21,18 +21,24 @@ traficFines/
 ├── pyproject.toml                Configuración y dependencias del paquete
 ├── uv.lock                       Versiones exactas de las dependencias
 ├── dist/
-│   └── traficfines-1.0.0-py3-none-any.whl   Paquete instalable
+│   ├── traficfines-1.0.0-py3-none-any.whl   Paquete instalable
+│   └── traficfines-1.0.0.tar.gz             Código fuente del paquete (sdist)
 ├── src/traficFines/
 │   ├── __init__.py
 │   ├── cache.py                  Clases Cache, CacheUrl y excepción CacheError
-│   └── madridFines.py            Clase MadridFines y excepción MadridError
+│   └── madridFines.py            Función get_url, clase MadridFines y excepción MadridError
+├── pruebas/                      Tests (fuera del paquete distribuido)
+│   ├── conftest.py
+│   ├── test_cache.py
+│   ├── test_madridFines.py
+│   └── data/                     Ficheros generados por los tests (ignorada por git)
 ├── cuadernos/
 │   ├── enunciado_original.ipynb  Enunciado y ETAPA 1 (análisis exploratorio)
-│   └── enunciado_actualizado.ipynb
-└── datos/
-    └── evolucion_multas05.png    Ejemplo del gráfico de multas por hora
+│   ├── validacion_clases.ipynb   Ejemplos para validar las clases y sus excepciones
+│   └── evolucion_multas.png      Gráfico generado por el cuaderno de validación
+└── util/
+    └── evolucion_multas05.png    Ejemplo del gráfico de multas por hora (del enunciado)
 ```
-
 ---
 
 ## Requisitos

@@ -8,7 +8,7 @@ import requests
 import traficFines
 import traficFines.madridFines as madrid_mod
 from traficFines.cache import CacheUrl, CacheError, TIMEOUT_PETICION
-from traficFines.madridFines import MadridFines, MadridError
+from traficFines.madridFines import MadridFines, MadridError, get_url
 
 from conftest import URL_PORTAL, item_portal, url_csv, csv_multas
 
@@ -77,6 +77,10 @@ def test_get_url_usa_timeout(portal_mayo):
     MadridFines.get_url(2023, 5)
     assert portal_mayo.calls == [URL_PORTAL]
     assert portal_mayo.last_kwargs == {"timeout": TIMEOUT_PETICION}
+
+
+def test_get_url_funcion_del_modulo(portal):
+    assert get_url(2023, 5) == MadridFines.get_url(2023, 5) == url_csv(2023, 5)
 
 
 def test_get_url_enlace_absoluto_se_mantiene(fake_web):
@@ -444,3 +448,8 @@ def test_analisis_faltan_columnas(multas, portal, graficos_dir, metodo, falta):
     multas._data = multas.data.drop(columns=[falta])
     with pytest.raises(MadridError, match=f"Faltan columnas en los datos: {falta}"):
         getattr(multas, metodo)(*argumentos(metodo, graficos_dir))
+
+
+def test_nombres_del_enunciado(multas_2023):
+    pd.testing.assert_frame_equal(multas_2023.fines_calification(), multas_2023.fines_calificacion())
+    pd.testing.assert_frame_equal(multas_2023.total_payment(), multas_2023.total_payments())
