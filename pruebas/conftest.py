@@ -49,12 +49,14 @@ class FakeWeb:
     """Sustituto de `requests.get` que responde según un diccionario url -> respuesta.
 
     Cada valor puede ser un `FakeResponse` o una excepción (que se lanza al pedir esa URL).
-    Las URLs no registradas devuelven un 404. Se guardan todas las URLs pedidas en `calls`.
+    Las URLs no registradas devuelven un 404. Se guardan todas las URLs pedidas en `calls`
+    y los argumentos con nombre de la última petición en `last_kwargs`.
     """
 
     def __init__(self):
         self.routes: dict[str, FakeResponse | Exception] = {}
         self.calls: list[str] = []
+        self.last_kwargs: dict = {}
 
     def add(self, url: str, body: str | bytes = "", status_code: int = 200) -> None:
         self.routes[url] = FakeResponse(status_code, body)
@@ -62,8 +64,9 @@ class FakeWeb:
     def fail(self, url: str, exc: Exception) -> None:
         self.routes[url] = exc
 
-    def __call__(self, url, *args, **kwargs):
+    def __call__(self, url, **kwargs):
         self.calls.append(url)
+        self.last_kwargs = kwargs
         respuesta = self.routes.get(url, FakeResponse(404, "Not Found"))
         if isinstance(respuesta, Exception):
             raise respuesta
@@ -76,10 +79,11 @@ def _red_bloqueada(*args, **kwargs):
 
 @pytest.fixture(autouse=True)
 def sin_red(monkeypatch):
-    """Por seguridad, cualquier `requests.get` no simulado hace fallar la prueba."""
+    """Por seguridad, cualquier `requests.get` no simulado hace fallar la prueba.
+
+    Los módulos del paquete usan `requests.get`, así que basta con parchear el módulo `requests`.
+    """
     monkeypatch.setattr(requests, "get", _red_bloqueada)
-    monkeypatch.setattr(cache_mod.requests, "get", _red_bloqueada)
-    monkeypatch.setattr(madrid_mod.requests, "get", _red_bloqueada)
 
 
 @pytest.fixture(autouse=True)
@@ -100,10 +104,9 @@ def graficos_dir() -> Path:
 
 @pytest.fixture
 def fake_web(monkeypatch) -> FakeWeb:
-    """Instala un `FakeWeb` como `requests.get` en ambos módulos del paquete."""
+    """Instala un `FakeWeb` como `requests.get`."""
     web = FakeWeb()
-    monkeypatch.setattr(cache_mod.requests, "get", web)
-    monkeypatch.setattr(madrid_mod.requests, "get", web)
+    monkeypatch.setattr(requests, "get", web)
     return web
 
 
@@ -167,6 +170,13 @@ def csv_multas(year: int, month: int, guion: bool = True) -> str:
         f"MUY GRAVE ;CL PRADO 4    ;{month};{year};0.00;600;NO ;6;POLICIA;MULTA D;90;160;441000;4471000",
     ]
     return "\n".join([cabecera, *filas]) + "\n"
+
+
+@pytest.fixture
+def portal_mayo(fake_web):
+    """Portal falso que solo publica mayo de 2023; el CSV lo registra cada prueba."""
+    fake_web.add(URL_PORTAL, html_portal([(2023, 5)]))
+    return fake_web
 
 
 @pytest.fixture

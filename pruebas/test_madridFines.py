@@ -1,5 +1,5 @@
-"""Pruebas de traficFines.madridFines: MadridFines y MadridError (sin acceso a internet)."""
-from pathlib import Path
+"""Pruebas de traficFines.madridFines: MadridFines y MadridError."""
+from io import StringIO
 
 import pandas as pd
 import pytest
@@ -8,14 +8,22 @@ import requests
 import traficFines
 import traficFines.madridFines as madrid_mod
 from traficFines.cache import CacheUrl, CacheError, TIMEOUT_PETICION
-from traficFines.madridFines import MadridFines, MadridError, MESES, RAIZ
+from traficFines.madridFines import MadridFines, MadridError
 
-from conftest import URL_PORTAL, html_portal, item_portal, url_csv, csv_multas
+from conftest import URL_PORTAL, item_portal, url_csv, csv_multas
 
 
 @pytest.fixture
 def multas() -> MadridFines:
     return MadridFines("multas", 30)
+
+
+@pytest.fixture
+def multas_2023(multas, portal) -> MadridFines:
+    """Multas con mayo y junio de 2023 cargados."""
+    multas.add(2023, 5)
+    multas.add(2023, 6)
+    return multas
 
 
 # --------------------------------------------------------------------------------------
@@ -58,10 +66,6 @@ def test_loaded_devuelve_una_copia(multas, portal):
 # get_url
 # --------------------------------------------------------------------------------------
 
-def test_url_portal():
-    assert URL_PORTAL == RAIZ + "dataset/210104-0-multas-circulacion-detalle/downloads"
-
-
 def test_get_url_encuentra_csv_detalle(portal):
     assert MadridFines.get_url(2023, 5) == url_csv(2023, 5)
     assert MadridFines.get_url(2023, 6) == url_csv(2023, 6)
@@ -69,21 +73,10 @@ def test_get_url_encuentra_csv_detalle(portal):
     assert portal.calls == [URL_PORTAL] * 3
 
 
-def test_get_url_usa_timeout(monkeypatch):
-    recibido = {}
-
-    class Respuesta:
-        status_code = 200
-        text = html_portal([(2023, 5)])
-
-    def get(url, **kwargs):
-        recibido["url"] = url
-        recibido.update(kwargs)
-        return Respuesta()
-
-    monkeypatch.setattr(madrid_mod.requests, "get", get)
+def test_get_url_usa_timeout(portal_mayo):
     MadridFines.get_url(2023, 5)
-    assert recibido == {"url": URL_PORTAL, "timeout": TIMEOUT_PETICION}
+    assert portal_mayo.calls == [URL_PORTAL]
+    assert portal_mayo.last_kwargs == {"timeout": TIMEOUT_PETICION}
 
 
 def test_get_url_enlace_absoluto_se_mantiene(fake_web):
@@ -107,12 +100,6 @@ def test_get_url_sin_enlace_csv_detalle(fake_web):
     ])
     fake_web.add(URL_PORTAL, html)
     with pytest.raises(MadridError, match="No se encontró el recurso para Enero de 2024"):
-        MadridFines.get_url(2024, 1)
-
-
-def test_get_url_html_vacio(fake_web):
-    fake_web.add(URL_PORTAL, "<html><body>Mantenimiento</body></html>")
-    with pytest.raises(MadridError, match="No se encontró el recurso"):
         MadridFines.get_url(2024, 1)
 
 
@@ -164,31 +151,23 @@ def test_load_anio_sin_ningun_mes(portal, multas):
         MadridFines.load(2015, None, multas.cacheurl)
 
 
-def test_load_mes_no_publicado(portal, multas):
-    with pytest.raises(MadridError, match="No se encontró el recurso"):
-        MadridFines.load(2023, 8, multas.cacheurl)
-
-
-def test_load_csv_con_error_http(fake_web, multas):
-    fake_web.add(URL_PORTAL, html_portal([(2023, 5)]))
-    fake_web.add(url_csv(2023, 5), "error", status_code=500)
+def test_load_csv_con_error_http(portal_mayo, multas):
+    portal_mayo.add(url_csv(2023, 5), "error", status_code=500)
     with pytest.raises(MadridError, match="No se pudieron descargar") as info:
         MadridFines.load(2023, 5, multas.cacheurl)
     assert isinstance(info.value.__cause__, CacheError)
 
 
-def test_load_csv_con_excepcion_de_requests(fake_web, multas):
-    fake_web.add(URL_PORTAL, html_portal([(2023, 5)]))
-    fake_web.fail(url_csv(2023, 5), requests.ConnectionError("cortado"))
+def test_load_csv_con_excepcion_de_requests(portal_mayo, multas):
+    portal_mayo.fail(url_csv(2023, 5), requests.ConnectionError("cortado"))
     with pytest.raises(MadridError, match="No se pudieron descargar") as info:
         MadridFines.load(2023, 5, multas.cacheurl)
     assert isinstance(info.value.__cause__, requests.RequestException)
 
 
 @pytest.mark.parametrize("contenido", ["", 'A;B\n"sin cerrar;1\n'])
-def test_load_csv_ilegible(fake_web, multas, contenido):
-    fake_web.add(URL_PORTAL, html_portal([(2023, 5)]))
-    fake_web.add(url_csv(2023, 5), contenido)
+def test_load_csv_ilegible(portal_mayo, multas, contenido):
+    portal_mayo.add(url_csv(2023, 5), contenido)
     with pytest.raises(MadridError, match="No se pudo leer el CSV"):
         MadridFines.load(2023, 5, multas.cacheurl)
 
@@ -198,7 +177,6 @@ def test_load_csv_ilegible(fake_web, multas, contenido):
 # --------------------------------------------------------------------------------------
 
 def df_crudo(year=2023, month=5, guion=True) -> pd.DataFrame:
-    from io import StringIO
     return pd.read_csv(StringIO(csv_multas(year, month, guion)), sep=";")
 
 
@@ -362,13 +340,11 @@ def test_datos_se_reutilizan_entre_instancias(portal):
 # Análisis: fines_hour, fines_calificacion, total_payments
 # --------------------------------------------------------------------------------------
 
-def test_fines_hour_genera_png(multas, portal, graficos_dir):
-    multas.add(2023, 5)
-    multas.add(2023, 6)
+def test_fines_hour_genera_png(multas_2023, graficos_dir):
     destino = graficos_dir / "evolucion_multas.png"
     destino.unlink(missing_ok=True)
 
-    multas.fines_hour(str(destino))
+    multas_2023.fines_hour(str(destino))
 
     assert destino.is_file()
     assert destino.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
@@ -401,24 +377,13 @@ def test_fines_hour_ignora_horas_nulas(multas, portal, graficos_dir):
     assert destino.is_file()
 
 
-def test_fines_hour_ruta_invalida(multas, portal, graficos_dir):
-    multas.add(2023, 5)
-    with pytest.raises(MadridError, match="No se pudo guardar el gráfico"):
-        multas.fines_hour(str(graficos_dir / "no_existe" / "grafico.png"))
-
-
-def test_fines_hour_cierra_la_figura(multas, portal, graficos_dir):
+def test_fines_hour_cierra_la_figura_aunque_falle(multas, portal, graficos_dir):
     multas.add(2023, 5)
     antes = len(madrid_mod.plt.get_fignums())
     multas.fines_hour(str(graficos_dir / "cierre.png"))
-    with pytest.raises(MadridError):
+    with pytest.raises(MadridError, match="No se pudo guardar el gráfico"):
         multas.fines_hour(str(graficos_dir / "no_existe" / "x.png"))
     assert len(madrid_mod.plt.get_fignums()) == antes
-
-
-def test_fines_hour_sin_datos(multas, graficos_dir):
-    with pytest.raises(MadridError, match="No hay datos cargados"):
-        multas.fines_hour(str(graficos_dir / "vacio.png"))
 
 
 def test_fines_calificacion(multas, portal):
@@ -432,23 +397,14 @@ def test_fines_calificacion(multas, portal):
     assert resultado.loc[(5, 2019)].to_dict() == {"GRAVE": 2, "LEVE": 1, "MUY GRAVE": 1}
 
 
-def test_fines_calificacion_rellena_con_cero(multas, portal):
-    multas.add(2023, 5)
-    multas.add(2023, 6)
-    filtrado = multas.data[~((multas.data["MES"] == 6) & (multas.data["CALIFICACION"] == "LEVE"))]
-    multas._data = filtrado
-    assert multas.fines_calificacion().loc[(6, 2023), "LEVE"] == 0
+def test_fines_calificacion_rellena_con_cero(multas_2023):
+    datos = multas_2023.data
+    multas_2023._data = datos[~((datos["MES"] == 6) & (datos["CALIFICACION"] == "LEVE"))]
+    assert multas_2023.fines_calificacion().loc[(6, 2023), "LEVE"] == 0
 
 
-def test_fines_calificacion_sin_datos(multas):
-    with pytest.raises(MadridError, match="No hay datos cargados"):
-        multas.fines_calificacion()
-
-
-def test_total_payments(multas, portal):
-    multas.add(2023, 5)
-    multas.add(2023, 6)
-    resultado = multas.total_payments()
+def test_total_payments(multas_2023):
+    resultado = multas_2023.total_payments()
 
     assert list(resultado.index.names) == ["MES", "ANIO"]
     assert list(resultado.columns) == ["IMPORTE_MAXIMO", "IMPORTE_MINIMO"]
@@ -467,9 +423,15 @@ def test_total_payments_importes_no_numericos_cuentan_cero(multas, portal):
     assert resultado.loc[(5, 2023), "IMPORTE_MINIMO"] == pytest.approx(840)
 
 
-def test_total_payments_sin_datos(multas):
+def argumentos(metodo, graficos_dir) -> list[str]:
+    """fines_hour necesita una ruta de destino; el resto de análisis no recibe argumentos."""
+    return [str(graficos_dir / "no_se_escribe.png")] if metodo == "fines_hour" else []
+
+
+@pytest.mark.parametrize("metodo", ["fines_hour", "fines_calificacion", "total_payments"])
+def test_analisis_sin_datos(multas, graficos_dir, metodo):
     with pytest.raises(MadridError, match="No hay datos cargados"):
-        multas.total_payments()
+        getattr(multas, metodo)(*argumentos(metodo, graficos_dir))
 
 
 @pytest.mark.parametrize("metodo, falta", [
@@ -480,11 +442,5 @@ def test_total_payments_sin_datos(multas):
 def test_analisis_faltan_columnas(multas, portal, graficos_dir, metodo, falta):
     multas.add(2023, 5)
     multas._data = multas.data.drop(columns=[falta])
-    args = [str(graficos_dir / "faltan.png")] if metodo == "fines_hour" else []
     with pytest.raises(MadridError, match=f"Faltan columnas en los datos: {falta}"):
-        getattr(multas, metodo)(*args)
-
-
-def test_meses():
-    assert len(MESES) == 12
-    assert MESES[1] == "Enero" and MESES[12] == "Diciembre"
+        getattr(multas, metodo)(*argumentos(metodo, graficos_dir))

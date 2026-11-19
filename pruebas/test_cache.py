@@ -228,20 +228,10 @@ def test_get_descarga_y_guarda(fake_web, cache_en_pruebas):
     assert (cache_en_pruebas / "app" / nombre).read_text(encoding="utf-8") == "a;b\n1;2\n"
 
 
-def test_get_usa_timeout(monkeypatch):
-    recibido = {}
-
-    class Respuesta:
-        status_code = 200
-        content = b"ok"
-
-    def get(url, **kwargs):
-        recibido.update(kwargs)
-        return Respuesta()
-
-    monkeypatch.setattr(cache_mod.requests, "get", get)
+def test_get_usa_timeout(fake_web):
+    fake_web.add(URL, "ok")
     assert CacheUrl("app", 1).get(URL) == "ok"
-    assert recibido == {"timeout": TIMEOUT_PETICION}
+    assert fake_web.last_kwargs == {"timeout": TIMEOUT_PETICION}
 
 
 def test_get_segunda_vez_usa_la_cache(fake_web):
